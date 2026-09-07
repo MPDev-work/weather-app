@@ -72,7 +72,7 @@ export function HourlyForecast({ hourly = [], formatTemp }) {
                 delay: Math.min(0.3, idx * 0.015),
                 ease: 'easeOut',
               }}
-              className={`flex flex-col items-center justify-between min-w-[76px] py-3 px-2 rounded-[25px] ${
+              className={`flex flex-col items-center justify-between min-w-[76px] py-3 px-2 rounded-[20px] ${
                 isCurrent
                   ? 'bg-white/25 dark:bg-white/15 font-semibold'
                   : item.isPast

@@ -33,6 +33,23 @@ function normalizeWeatherData(data, locationInfo) {
     const fullDayName = fullDaysOfWeek[d.getDay()];
     const dayMeta = getWeatherMeta(daily.weather_code[index], 1);
 
+    const dayHourly = [];
+    for (let h = 0; h < hourly.time.length; h++) {
+      if (hourly.time[h].startsWith(dateStr)) {
+        const hour = parseInt(hourly.time[h].slice(11, 13), 10);
+        const isDayTime = hour >= 6 && hour < 19 ? 1 : 0;
+        const hourMeta = getWeatherMeta(hourly.weather_code[h], isDayTime);
+        dayHourly.push({
+          time: `${hour.toString().padStart(2, '0')}:00`,
+          hour,
+          temperature: Math.round(hourly.temperature_2m[h]),
+          condition: hourMeta.label,
+          type: hourMeta.type,
+          precipitationProbability: hourly.precipitation_probability[h] ?? 0,
+        });
+      }
+    }
+
     return {
       date: dateStr,
       dayName,
@@ -42,10 +59,17 @@ function normalizeWeatherData(data, locationInfo) {
       conditionCode: daily.weather_code[index],
       condition: dayMeta.label,
       type: dayMeta.type,
+      scene: dayMeta.scene,
       precipitationProbability: daily.precipitation_probability_max[index] ?? 0,
       uvMax: daily.uv_index_max?.[index] ?? 0,
-      sunrise: daily.sunrise[index],
-      sunset: daily.sunset[index],
+      windSpeedMax: Math.round(daily.wind_speed_10m_max?.[index] ?? 0),
+      sunriseTime: daily.sunrise?.[index]
+        ? daily.sunrise[index].slice(11, 16)
+        : '06:00',
+      sunsetTime: daily.sunset?.[index]
+        ? daily.sunset[index].slice(11, 16)
+        : '18:00',
+      hourly: dayHourly,
     };
   });
 
