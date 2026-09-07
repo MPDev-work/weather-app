@@ -49,22 +49,43 @@ function normalizeWeatherData(data, locationInfo) {
     };
   });
 
-  const currentHourTime = new Date().toISOString().slice(0, 13);
-  let startIndex = hourly.time.findIndex((t) => t.startsWith(currentHourTime));
-  if (startIndex === -1) startIndex = 0;
+  const currentHourPrefix = current.time ? current.time.slice(0, 13) : '';
+  const currentDatePrefix = current.time ? current.time.slice(0, 10) : '';
+
+  let currentHourIndex = hourly.time.findIndex((t) =>
+    t.startsWith(currentHourPrefix),
+  );
+  if (currentHourIndex === -1) {
+    currentHourIndex = hourly.time.findIndex((t) => t >= current.time);
+    if (currentHourIndex === -1) currentHourIndex = 0;
+  }
+
+  let todayStartIndex = hourly.time.findIndex((t) =>
+    t.startsWith(currentDatePrefix),
+  );
+  if (todayStartIndex === -1 || todayStartIndex > currentHourIndex) {
+    todayStartIndex = Math.max(0, currentHourIndex - 12);
+  }
+
+  const sliceStart = Math.max(0, todayStartIndex);
+  const sliceEnd = Math.min(hourly.time.length, currentHourIndex + 25);
 
   const hourlySlice = hourly.time
-    .slice(startIndex, startIndex + 24)
+    .slice(sliceStart, sliceEnd)
     .map((timeStr, i) => {
-      const rawIndex = startIndex + i;
-      const d = new Date(timeStr);
-      const hour = d.getHours();
-      const isDayTime = hour >= 6 && hour < 20 ? 1 : 0;
+      const rawIndex = sliceStart + i;
+      const hour = parseInt(timeStr.slice(11, 13), 10);
+      const isDayTime = hour >= 6 && hour < 19 ? 1 : 0;
       const hourMeta = getWeatherMeta(hourly.weather_code[rawIndex], isDayTime);
+      const isCurrent = rawIndex === currentHourIndex;
 
       return {
-        time: i === 0 ? 'Now' : `${hour.toString().padStart(2, '0')}:00`,
+        time: isCurrent ? 'Now' : `${hour.toString().padStart(2, '0')}:00`,
+        displayHour: `${hour.toString().padStart(2, '0')}:00`,
         rawTime: timeStr,
+        hour,
+        isCurrent,
+        isPast: rawIndex < currentHourIndex,
         temperature: Math.round(hourly.temperature_2m[rawIndex]),
         conditionCode: hourly.weather_code[rawIndex],
         condition: hourMeta.label,
@@ -78,18 +99,10 @@ function normalizeWeatherData(data, locationInfo) {
     ? Number((current.visibility / 1000).toFixed(1))
     : 10;
   const todaySunrise = daily.sunrise?.[0]
-    ? new Date(daily.sunrise[0]).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
+    ? daily.sunrise[0].slice(11, 16)
     : '06:00';
   const todaySunset = daily.sunset?.[0]
-    ? new Date(daily.sunset[0]).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
+    ? daily.sunset[0].slice(11, 16)
     : '18:00';
 
   return {
