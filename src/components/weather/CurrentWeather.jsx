@@ -18,7 +18,7 @@ export function CurrentWeather({
   });
 
   return (
-    <div className="flex flex-col items-center justify-center text-center text-white py-4 md:py-6">
+    <div className="relative flex flex-col items-center justify-center text-center text-white py-4 md:py-6">
       <button
         onClick={onOpenSearch}
         className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-500 ease-out cursor-pointer group"
@@ -38,7 +38,7 @@ export function CurrentWeather({
         {currentDate}
       </div>
 
-      <div className="relative w-full max-w-[460px] md:max-w-[560px] h-64 md:h-80 my-1 flex items-center justify-center">
+      <div className="w-full md:max-w-[560px] md:h-80 flex items-center justify-center">
         <WeatherCanvas3D scene={current.scene} reducedMotion={reducedMotion} />
       </div>
 
